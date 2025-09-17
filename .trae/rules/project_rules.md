@@ -1,0 +1,9 @@
+1. 项目文件架构
+    1. 项目根目录
+        1. node
+            1. impl（节点实现类）
+            2. base_action_node（基础节点，所有node都会继承该父类）
+            3. for_loop_node（for循环基础节点）
+            4. 其他基础节点
+        2. 其他
+        3. action_node_system（主程序）
