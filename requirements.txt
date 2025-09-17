@@ -1,0 +1,6 @@
+loguru
+pyautogui
+opencv-python
+pillow
+tkinter
+wxauto

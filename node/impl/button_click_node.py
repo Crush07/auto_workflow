@@ -1,4 +1,4 @@
-import os
+from loguru import logger
 import os
 import time
 import pyautogui
@@ -52,25 +52,24 @@ class ClickAction(BaseActionNode):
                 else:
                     pyautogui.click(interval=0.3)
                 
-                # 打印点击次数
-                print(f"点击次数: {self.parent_node.click_count}")
-                # 点击成功
-                print(f"成功点击按钮: {self.parent_node.get_description()} (尝试次数: {self.parent_node.attempt_count})")
+                # 记录点击次数和成功信息
+                logger.info(f"点击次数: {self.parent_node.click_count}")
+                logger.success(f"成功点击按钮: {self.parent_node.get_description()} (尝试次数: {self.parent_node.attempt_count})")
                 self.found = True
             else:
                 # 未找到图像
                 status_msg = f"第{self.parent_node.attempt_count}次尝试未找到按钮，正在继续查找..."
                 if self.parent_node.attempt_count % 5 == 0:  # 每5次尝试显示一次详细错误信息
                     status_msg += f" (未找到匹配图像)"
-                print(status_msg)
+                logger.info(status_msg)
             
         except FileNotFoundError as e:
-            print(f"错误: 图像文件不存在: {e}")
+            logger.error(f"错误: 图像文件不存在: {e}")
             self.found = True  # 文件不存在，停止尝试
         except Exception as e:
             # 其他错误
             status_msg = f"第{self.parent_node.attempt_count}次尝试发生错误: {str(e)}"
-            print(status_msg)
+            logger.error(status_msg)
             
         # 添加短暂延迟，避免过于频繁地查找
         time.sleep(2)
@@ -78,15 +77,18 @@ class ClickAction(BaseActionNode):
 # 点击按钮节点类
 class ButtonClickNode(ForLoopNode):
     def __init__(self, image_path="", click_count=1):
-        # 调用父类构造函数，设置循环次数为10次
-        super().__init__(loop_count=10, is_infinite=False)
+        # 先初始化属性，再调用父类初始化
         self.image_path = image_path  # 按钮图片位置
         self.click_count = max(1, click_count)  # 连续点击次数，至少为1
         self.attempt_count = 0  # 尝试次数计数
         
+        # 调用父类构造函数，设置循环次数为10次
+        super().__init__(loop_count=10, is_infinite=False)
+        
         # 创建点击动作并添加到循环中
         self.click_action = ClickAction(self)
         self.add_action(self.click_action)
+        logger.info(f"创建按钮点击节点: {self.get_description()}")
     
     def to_dict(self):
         """转换为字典格式以便保存"""
@@ -122,11 +124,11 @@ class ButtonClickNode(ForLoopNode):
         self.before_execute()
         
         if not self.image_path or not os.path.exists(self.image_path):
-            print(f"错误: 图像文件不存在或路径为空")
+            logger.error(f"错误: 图像文件不存在或路径为空")
             self.after_execute()
             return
         
-        print(f"开始查找按钮: {self.get_description()}")
+        logger.info(f"开始查找按钮: {self.get_description()}")
         
         # 重置状态
         self.attempt_count = 0
@@ -141,6 +143,6 @@ class ButtonClickNode(ForLoopNode):
                 time.sleep(0.1)  # 短暂延迟
             
         if self.attempt_count >= self.loop_count and not self.click_action.found:
-            print(f"达到最大尝试次数({self.loop_count})，停止查找按钮")
+            logger.warning(f"达到最大尝试次数({self.loop_count})，停止查找按钮")
             
         self.after_execute()

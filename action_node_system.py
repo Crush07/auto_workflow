@@ -5,9 +5,10 @@ import sys
 import time
 import ctypes
 from PIL import Image, ImageTk
-# 调整导入方式，使用当前目录导入而不是相对导入
-from keyboard_shortcut_node import KeyboardShortcutNode
-from button_click_node import ButtonClickNode
+from loguru import logger
+# 从正确的包路径导入节点类
+from node.impl.keyboard_shortcut_node import KeyboardShortcutNode
+from node.impl.button_click_node import ButtonClickNode
 
 
 # 主程序类
@@ -374,14 +375,17 @@ class ActionNodeSystem:
     
     def _play_action_flow(self):
         """播放动作流"""
-        for node in self.action_nodes:
+        logger.info(f"开始执行动作流，共 {len(self.action_nodes)} 个动作节点")
+        for i, node in enumerate(self.action_nodes):
             try:
+                logger.info(f"准备执行动作节点 {i+1}/{len(self.action_nodes)}: {node.get_description()}")
                 time.sleep(1)
                 node.execute()
             except Exception as e:
-                print(f"执行动作时出错: {e}")
+                logger.error(f"执行动作节点 {i+1} 时出错: {e}")
                 # 可以选择继续执行下一个动作或停止
                 continue
+        logger.info("动作流执行完成")
 
 
 def run_as_admin():
